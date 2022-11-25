@@ -99,7 +99,7 @@ func (s *Server) handleSave() http.HandlerFunc {
 
 func (s *Server) saveVote(voterID, vote string) error {
 	// fake error
-	return nil, http.StatusBadRequest
+	return http.StatusBadRequest
 	dat, err := json.Marshal(&struct {
 		VoterID string `json:"voter_id"`
 		Vote    string `json:"vote"`
