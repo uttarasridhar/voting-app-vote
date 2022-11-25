@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -99,7 +100,7 @@ func (s *Server) handleSave() http.HandlerFunc {
 
 func (s *Server) saveVote(voterID, vote string) error {
 	// fake error
-	return http.StatusBadRequest
+	return errors.New("Check saveVote function for error")
 	dat, err := json.Marshal(&struct {
 		VoterID string `json:"voter_id"`
 		Vote    string `json:"vote"`
