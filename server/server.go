@@ -45,7 +45,10 @@ func NewServer() (*Server, error) {
 	if err := json.Unmarshal([]byte(snsTopicARNEnvVal), &topic); err != nil {
 		return nil, fmt.Errorf("unmarshal topic ARN: %w", err)
 	}
-	apiEndpoint := fmt.Sprintf("http://api.%s:8080/votes", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"))
+	apiPortNumber := 8080
+	// For re:invent demo, uncomment to change the port number 8000
+	apiPortNumber = 8000
+	apiEndpoint := fmt.Sprintf("http://api.%s:%s/votes", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"), apiPortNumber)
 	return &Server{
 		Router:    mux.NewRouter(),
 		SNSClient: sns.New(sess),
