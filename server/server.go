@@ -67,7 +67,7 @@ func (s *Server) handleHealthCheck() http.HandlerFunc {
 		voterID, _ := uuid.NewRandom()
 	        apiURL := fmt.Sprintf("%s/%s", s.APIEndpoint, voterID)
 		resp, _ := http.Get(apiURL)
-		if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode >= 500 {
 			http.Error(w, "api response status: %d\n", resp.StatusCode)
 		}
 	}
