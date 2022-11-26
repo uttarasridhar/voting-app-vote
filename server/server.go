@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -62,7 +61,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleHealthCheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
+		voterID, _ := uuid.NewRandom()
+	        apiURL := fmt.Sprintf("http://api.%s:8080/votes/%s", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"), voterID)
+		resp, _ := http.Get(apiURL)
+		if resp.StatusCode != http.StatusOK {
+			http.Error(w, "api response status: %d\n", resp.StatusCode)
+		}
 	}
 }
 
@@ -91,7 +95,7 @@ func (s *Server) handleSave() http.HandlerFunc {
 		}
 		vote := r.FormValue("vote")
 		if err := s.saveVote(voterID, vote); err != nil {
-			http.Error(w, "save vote", http.StatusInternalServerError)
+			http.Error(w, "save vote internal error", http.StatusInternalServerError)
 			return
 		}
 		renderTemplate(w, "index", vote)
@@ -99,8 +103,6 @@ func (s *Server) handleSave() http.HandlerFunc {
 }
 
 func (s *Server) saveVote(voterID, vote string) error {
-	// fake error
-	return errors.New("Check saveVote function for error")
 	dat, err := json.Marshal(&struct {
 		VoterID string `json:"voter_id"`
 		Vote    string `json:"vote"`
