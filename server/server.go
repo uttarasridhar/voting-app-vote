@@ -26,6 +26,7 @@ type Server struct {
 	Router    *mux.Router
 	SNSClient *sns.SNS
 	TopicARN  string
+	APIEndpoint string
 }
 
 // NewServer inits a new Server struct.
@@ -44,10 +45,12 @@ func NewServer() (*Server, error) {
 	if err := json.Unmarshal([]byte(snsTopicARNEnvVal), &topic); err != nil {
 		return nil, fmt.Errorf("unmarshal topic ARN: %w", err)
 	}
+	apiEndpoint := fmt.Sprintf("http://api.%s:8080/votes", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"))
 	return &Server{
 		Router:    mux.NewRouter(),
 		SNSClient: sns.New(sess),
 		TopicARN:  topic.TopicARN,
+		APIEndpoint: apiEndpoint,
 	}, nil
 }
 
@@ -62,7 +65,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleHealthCheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		voterID, _ := uuid.NewRandom()
-	        apiURL := fmt.Sprintf("http://api.%s:8080/votes/%s", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"), voterID)
+	        apiURL := fmt.Sprintf("%s/%s", s.APIEndpoint, voterID)
 		resp, _ := http.Get(apiURL)
 		if resp.StatusCode != http.StatusOK {
 			http.Error(w, "api response status: %d\n", resp.StatusCode)
@@ -77,7 +80,7 @@ func (s *Server) handleView() http.HandlerFunc {
 			http.Error(w, "get voter id", http.StatusInternalServerError)
 			return
 		}
-		vote, err := getVote(voterID)
+		vote, err := s.getVote(voterID)
 		if err != nil {
 			http.Error(w, "get vote", http.StatusInternalServerError)
 			return
@@ -147,9 +150,9 @@ func getVoterID(r *http.Request) (string, error) {
 
 // getVote queries the API microservice to retrieve the vote.
 // If the vote doesn't exist, then returns an empty string "".
-func getVote(voterID string) (string, error) {
-	endpoint := fmt.Sprintf("http://api.%s:8080/votes/%s", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"), voterID)
-	resp, err := http.Get(endpoint)
+func (s *Server) getVote(voterID string) (string, error) {
+	apiURL := fmt.Sprintf("%s/%s", s.APIEndpoint, voterID)
+	resp, err := http.Get(apiURL)
 	if err != nil {
 		log.Printf("WARN: server: couldn't get vote for voter id %s: %v\n", voterID, err)
 		return "", nil
