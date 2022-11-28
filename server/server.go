@@ -23,9 +23,9 @@ const (
 
 // Server is the Vote server.
 type Server struct {
-	Router      *mux.Router
-	SNSClient   *sns.SNS
-	TopicARN    string
+	Router    *mux.Router
+	SNSClient *sns.SNS
+	TopicARN  string
 	APIEndpoint string
 }
 
@@ -45,11 +45,11 @@ func NewServer() (*Server, error) {
 	if err := json.Unmarshal([]byte(snsTopicARNEnvVal), &topic); err != nil {
 		return nil, fmt.Errorf("unmarshal topic ARN: %w", err)
 	}
-	apiEndpoint := fmt.Sprintf("http://api.%s:8000/votes", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"))
+	apiEndpoint := fmt.Sprintf("http://api.%s:8080/votes", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"))
 	return &Server{
-		Router:      mux.NewRouter(),
-		SNSClient:   sns.New(sess),
-		TopicARN:    topic.TopicARN,
+		Router:    mux.NewRouter(),
+		SNSClient: sns.New(sess),
+		TopicARN:  topic.TopicARN,
 		APIEndpoint: apiEndpoint,
 	}, nil
 }
@@ -65,7 +65,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleHealthCheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		voterID, _ := uuid.NewRandom()
-		apiURL := fmt.Sprintf("%s/%s", s.APIEndpoint, voterID)
+	        apiURL := fmt.Sprintf("%s/%s", s.APIEndpoint, voterID)
 		resp, _ := http.Get(apiURL)
 		if resp.StatusCode >= 500 {
 			http.Error(w, "api response status: %d\n", resp.StatusCode)
