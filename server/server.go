@@ -45,7 +45,7 @@ func NewServer() (*Server, error) {
 	if err := json.Unmarshal([]byte(snsTopicARNEnvVal), &topic); err != nil {
 		return nil, fmt.Errorf("unmarshal topic ARN: %w", err)
 	}
-	apiEndpoint := fmt.Sprintf("http://api.%s:8000/votes", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"))
+	apiEndpoint := fmt.Sprintf("http://api.%s:8080/votes", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"))
 	return &Server{
 		Router:      mux.NewRouter(),
 		SNSClient:   sns.New(sess),
